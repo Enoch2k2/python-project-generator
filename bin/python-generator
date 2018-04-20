@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+require_relative '../lib/generator'
+
+Generator.new.run(ARGV)
