@@ -1,6 +1,6 @@
 require 'pry'
 class Generator
-  attr_accessor :pdir, :executable, :environment, :project, :requirements
+  attr_accessor :pdir, :executable, :environment, :project, :requirements, :models
 
   GREEN='\033[0;32m'
   RED='\033[0;31m'
@@ -15,9 +15,24 @@ class Generator
       array.length < 3 ? new(array[1]) : new(array[1], array[2..(array.length-1)])
     elsif array[0] == "--help"
       help
+    elsif array[0] == "model"
+      create_model(array[1])
     else
       error("unknown command")
     end
+  end
+
+  def create_model(model)
+    @environment = "./config/environment.py"
+    @requirements = "./requirements.txt"
+    @models = "./lib/models/#{model}.py"
+    add_file(models)
+    add_line("import os", models)
+    add_line("import sys", models)
+    add_line("\ncwd = os.getcwd()", models)
+    add_line('sys.path.append(cwd + "/lib")\n', models)
+    add_line("class #{model.capitalize()}():\n", models)
+    add_line("from #{model} import *", environment)    
   end
 
   def error(error_text)
@@ -52,7 +67,7 @@ class Generator
     add_line("import sys", executable)
     add_line("\ncwd = os.getcwd()", executable)
     add_line('sys.path.append(cwd + "/config")', executable)
-    add_line("\nfrom config import *", executable)
+    add_line("\nfrom environment import *", executable)
   end
 
   def add_requirements(dependencies=nil)
@@ -66,6 +81,7 @@ class Generator
 
   def add_lib
     add_folder("#{pdir}/lib")
+    add_folder("#{pdir}/lib/models")
   end
 
   def add_config
@@ -75,7 +91,7 @@ class Generator
     add_line("import sys", environment)
     add_line("\ncwd = os.getcwd()", environment)
     add_line('sys.path.append(cwd + "/lib")', environment)
-    add_line("\nfrom lib import *", environment)
+    add_line('sys.path.append(cwd + "/lib/models")\n', environment)
   end
 
   def add_file(path)
